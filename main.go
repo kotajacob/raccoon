@@ -16,24 +16,28 @@ import (
 )
 
 type Config struct {
+	Servers map[string]Server `toml:servers`
+}
+
+type Server struct {
 	Addr string `toml:"addr"`
 	Pass string `toml:"pass"`
 }
 
 type model struct {
-	conf  Config
-	log   []string
-	input textinput.Model
+	server Server
+	log    []string
+	input  textinput.Model
 }
 
-func newModel(conf Config) model {
+func newModel(server Server) model {
 	ti := textinput.New()
 	ti.Focus()
 	ti.CharLimit = 156
 	ti.Width = 20
 	return model{
-		conf:  conf,
-		input: ti,
+		server: server,
+		input:  ti,
 	}
 }
 
@@ -51,7 +55,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyEnter:
 			cmd := m.input.Value()
 			m.log = append(m.log, cmd)
-			m.log = append(m.log, send(m.conf, cmd))
+			m.log = append(m.log, send(m.server, cmd))
 			m.input.Reset()
 		}
 	}
@@ -74,31 +78,36 @@ func main() {
 	// Find and read config.
 	configPath, err := findConfig("raccoon/config.toml")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed finding config: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("failed finding config: %v\n", err)
 	}
 
 	var conf Config
 	_, err = toml.DecodeFile(configPath, &conf)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed reading config: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("failed reading config: %v\n", err)
 	}
 
-	// CLI mode.
 	flag.Parse()
-	if len(flag.Args()) > 0 {
+	var server Server
+	l := len(flag.Args())
+	switch {
+	case l == 1:
+		server = conf.Servers[flag.Args()[0]]
+	case l > 1:
+		// CLI mode.
 		var b strings.Builder
 		for _, arg := range flag.Args() {
 			b.WriteString(arg)
 		}
-		fmt.Println(send(conf, b.String()))
+		fmt.Println(send(conf.Servers[flag.Args()[0]], b.String()))
 		os.Exit(0)
+	default:
+		log.Fatalln("missing server name argument!")
 	}
 
 	// TUI mode.
 	p := tea.NewProgram(
-		newModel(conf),
+		newModel(server),
 		tea.WithAltScreen(),
 	)
 	if err := p.Start(); err != nil {
@@ -127,8 +136,8 @@ func exists(path string) bool {
 	return err == nil || os.IsExist(err)
 }
 
-func send(conf Config, cmd string) string {
-	conn, err := net.DialRCON(conf.Addr, conf.Pass)
+func send(server Server, cmd string) string {
+	conn, err := net.DialRCON(server.Addr, server.Pass)
 	if err != nil {
 		return err.Error()
 	}
