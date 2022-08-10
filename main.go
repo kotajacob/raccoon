@@ -16,7 +16,7 @@ import (
 )
 
 type Config struct {
-	Servers map[string]Server `toml:servers`
+	Servers map[string]Server `toml:"servers"`
 }
 
 type Server struct {
