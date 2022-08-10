@@ -13,6 +13,7 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/muesli/reflow/wordwrap"
 )
 
 type Config struct {
@@ -25,6 +26,9 @@ type Server struct {
 }
 
 type model struct {
+	width  int
+	height int
+
 	server Server
 	log    []string
 	input  textinput.Model
@@ -33,8 +37,6 @@ type model struct {
 func newModel(server Server) model {
 	ti := textinput.New()
 	ti.Focus()
-	ti.CharLimit = 156
-	ti.Width = 20
 	return model{
 		server: server,
 		input:  ti,
@@ -58,6 +60,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.log = append(m.log, send(m.server, cmd))
 			m.input.Reset()
 		}
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.input.CharLimit = msg.Width
+		m.input.Width = msg.Width
+		m.height = msg.Height
 	}
 
 	m.input, cmd = m.input.Update(msg)
@@ -67,7 +74,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	var b strings.Builder
 	for _, s := range m.log {
-		b.WriteString(s)
+		b.WriteString(wordwrap.String(s, m.width))
 		b.WriteString("\n")
 	}
 	b.WriteString(m.input.View())
@@ -97,7 +104,8 @@ func main() {
 		// CLI mode.
 		args := flag.Args()
 		cmd := strings.Join(args[1:], " ")
-		fmt.Println(send(conf.Servers[flag.Args()[0]], cmd))
+		resp := send(conf.Servers[flag.Args()[0]], cmd)
+		fmt.Println(resp)
 		os.Exit(0)
 	default:
 		log.Fatalln("missing server name argument!")
