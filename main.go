@@ -95,11 +95,9 @@ func main() {
 		server = conf.Servers[flag.Args()[0]]
 	case l > 1:
 		// CLI mode.
-		var b strings.Builder
-		for _, arg := range flag.Args() {
-			b.WriteString(arg)
-		}
-		fmt.Println(send(conf.Servers[flag.Args()[0]], b.String()))
+		args := flag.Args()
+		cmd := strings.Join(args[1:], " ")
+		fmt.Println(send(conf.Servers[flag.Args()[0]], cmd))
 		os.Exit(0)
 	default:
 		log.Fatalln("missing server name argument!")
