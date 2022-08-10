@@ -9,7 +9,7 @@ make
 sudo make install
 ```
 
-# usage
+# Usage
 First create a config file in either `/etc/raccoon/config.toml` or in your
 user's XDG config directory (probably `$HOME/.config/raccoon/config.toml`):
 ```
