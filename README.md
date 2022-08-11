@@ -26,6 +26,15 @@ name of your configured server and list is the minecraft command to run.
 If you give only a server name without a command raccoon will enter an
 interactive TUI prompt.
 
+Minecraft itself has a known bug where, when executing rcon commands, the
+response is all in one string with no newline characters, even when the command
+yields several lines of text when executed on the console:
+https://bugs.mojang.com/browse/MC-7569
+
+Fortunately, a friend of mine wrote a tiny server mod for fabric which fixes
+this issue:
+https://git.sr.ht/~hnaguski/rconn
+
 # Author
 Written and maintained by Dakota Walsh.
 Up-to-date sources can be found at https://git.sr.ht/~kota/raccoon/
