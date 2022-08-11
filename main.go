@@ -161,8 +161,7 @@ func send(server Server, cmd string) string {
 			fmt.Print(err)
 		}
 		b.WriteString(resp)
-		b.WriteString("\n")
 		break
 	}
-	return strings.TrimSuffix(b.String(), "\n")
+	return b.String()
 }
