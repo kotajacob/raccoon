@@ -105,7 +105,7 @@ func main() {
 		args := flag.Args()
 		cmd := strings.Join(args[1:], " ")
 		resp := send(conf.Servers[flag.Args()[0]], cmd)
-		fmt.Println(resp)
+		fmt.Print(resp)
 		os.Exit(0)
 	default:
 		log.Fatalln("missing server name argument!")
